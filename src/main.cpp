@@ -2,6 +2,7 @@
 #include "DRV8835MotorShield_esp32.h"
 #include <PubSubClient.h>
 #include <ESPmDNS.h>
+#include <ArduinoOTA.h>
 
 DRV8835MotorShieldEsp32 motors;
 
@@ -17,13 +18,15 @@ PID pid(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
 void setup_wifi();
 void setup_mqtt();
 void reconnect_mqtt();
+void setup_arduino_ota();
 
 void mpu_9250_setup();
 void mpu_9250_loop();
 
-
 extern float yaw, pitch, roll;
 extern PubSubClient pubsub_client;
+
+long publish_delay = 20;
 
 
 void setup()
@@ -32,7 +35,8 @@ void setup()
   Serial.println("setup");
 
   setup_wifi();
-  
+  setup_arduino_ota();
+
   mpu_9250_setup();
   Serial.println("IMU active");
 
@@ -45,11 +49,8 @@ void setup()
   motors.setM2Speed(0);
 
   pid.SetMode(AUTOMATIC);
-  pid.SetSampleTime(10);
-  pid.SetOutputLimits(-100, 100 );
-
-
-
+  pid.SetSampleTime(publish_delay);
+  pid.SetOutputLimits(-400, 400 );
 }
 
 long c = millis();
@@ -61,20 +62,21 @@ void loop()
   }
   pubsub_client.loop();
 
+  ArduinoOTA.handle();
 
-  //ArduinoOTA.handle();
-
-  mpu_9250_loop();
-  
-  input = pitch;
-  pid.Compute();
   long delt_t = millis() - c;
-  if (delt_t > 10) { // update LCD once per half-second independent of read rate
+  if (delt_t > publish_delay) { 
+    
+    mpu_9250_loop();
+  
+    input = pitch;
+    pid.Compute();
+
+    motors.setM1Speed(output);
+    motors.setM2Speed(output);
+
+    pubsub_client.publish("robutt/motor/pitch", String(pitch).c_str());
     pubsub_client.publish("robutt/motor/output", String(output).c_str());
     c = millis();
   }
-  motors.setM1Speed(output);
-  motors.setM2Speed(output);
-  //webserver_loop();
 }
-

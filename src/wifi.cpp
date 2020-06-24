@@ -1,26 +1,29 @@
 #include <WiFi.h>
+#include <WiFiMulti.h>
+
 #include <HardwareSerial.h>
 
 
-const char* ssid = "";
+const char* ssid1 = "UPSTAIRS";
+const char* ssid2 = "VADER";
+
 const char* password = "";
+
+WiFiMulti wifiMulti;
 
 void setup_wifi()
 {
   Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+  Serial.print("Connecting to wifi");
 
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    Serial.print(".");
+  wifiMulti.addAP(ssid1, password);
+  wifiMulti.addAP(ssid2, password);
+  if(wifiMulti.run() == WL_CONNECTED) {
+        Serial.println("");
+        Serial.println("WiFi connected");
+        Serial.print("IP address: ");
+        Serial.println(WiFi.localIP());
+        Serial.print("SSID: ");
+        Serial.println(WiFi.SSID());
   }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
 }
