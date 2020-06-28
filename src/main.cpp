@@ -9,9 +9,9 @@ DRV8835MotorShieldEsp32 motors;
 //PID
 double setpoint = 0;
 double input, output;
-double Kp = 5;
-double Kd = 0.5;
-double Ki = 0;
+double Kp = 3;
+double Kd = 0.1;
+double Ki = 0.5;
 PID pid(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
 
 
@@ -26,7 +26,7 @@ void mpu_9250_loop();
 extern float yaw, pitch, roll;
 extern PubSubClient pubsub_client;
 
-long publish_delay = 20;
+long publish_delay = 5;
 
 
 void setup()
@@ -50,7 +50,7 @@ void setup()
 
   pid.SetMode(AUTOMATIC);
   pid.SetSampleTime(publish_delay);
-  pid.SetOutputLimits(-400, 400 );
+  pid.SetOutputLimits(-100, 100 );
 }
 
 long c = millis();
@@ -75,8 +75,8 @@ void loop()
     motors.setM1Speed(output);
     motors.setM2Speed(output);
 
-    pubsub_client.publish("robutt/motor/pitch", String(pitch).c_str());
-    pubsub_client.publish("robutt/motor/output", String(output).c_str());
+    String msg = "{ \"setpoint\":" + String(setpoint) + ", \"pitch\":" + String(pitch) + ", \"output\":" + String(output) + " }";
+    pubsub_client.publish("robutt/motor", msg.c_str());
     c = millis();
   }
 }
