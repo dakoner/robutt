@@ -8,11 +8,12 @@ WiFiClient espClient;
 PubSubClient pubsub_client(espClient);
 
 
-
+extern bool drive_mode;
 extern double Kp, Kd, Ki;
-extern double setpoint;
+extern double angle_setpoint;
+extern double velocity_setpoint_left, velocity_setpoint_right;
 
-extern PID pid;
+extern PID pid_left, pid_right;
 
 void callback(char *topic, byte *message, unsigned int length)
 {
@@ -29,17 +30,28 @@ Serial.println(messageTemp);
 String st = String(topic);
   if (st == "robutt/p") {
     Kp = messageTemp.toDouble();
-    pid.SetTunings(Kp, Ki, Kd);
+    pid_left.SetTunings(Kp, Ki, Kd);
+    pid_right.SetTunings(Kp, Ki, Kd);
   } else if (st == "robutt/i") {
     Ki = messageTemp.toDouble();
-    pid.SetTunings(Kp, Ki, Kd);
-
+    pid_left.SetTunings(Kp, Ki, Kd);
+    pid_right.SetTunings(Kp, Ki, Kd);
   } else if (st == "robutt/d") {
     Kd = messageTemp.toDouble();
-    pid.SetTunings(Kp, Ki, Kd);
+    pid_left.SetTunings(Kp, Ki, Kd);
+    pid_right.SetTunings(Kp, Ki, Kd);
   }
-  else if (st == "robutt/sp") {
-    setpoint = messageTemp.toDouble();
+  else if (st == "robutt/drive_mode") {
+    drive_mode = (bool)messageTemp.toInt();
+  }
+  else if (st == "robutt/angle_setpoint") {
+    angle_setpoint = messageTemp.toDouble();
+  }
+  else if (st == "robutt/velocity_setpoint_left") {
+    velocity_setpoint_left = messageTemp.toDouble();
+  }
+  else if (st == "robutt/velocity_setpoint_right") {
+    velocity_setpoint_right = messageTemp.toDouble();
   }
 }
 
@@ -63,8 +75,10 @@ void reconnect_mqtt()
       pubsub_client.subscribe("robutt/p");
       pubsub_client.subscribe("robutt/i");
       pubsub_client.subscribe("robutt/d");
-      pubsub_client.subscribe("robutt/sp");
-
+      pubsub_client.subscribe("robutt/angle_setpoint");
+      pubsub_client.subscribe("robutt/velocity_setpoint_left");
+      pubsub_client.subscribe("robutt/velocity_setpoint_right");
+      pubsub_client.subscribe("robutt/drive_mode");
     }
     else
     {
