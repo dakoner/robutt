@@ -67,10 +67,10 @@ void setup()
 
   pid_left.SetMode(AUTOMATIC);
   pid_left.SetSampleTime(publish_delay);
-  pid_left.SetOutputLimits(-100, 100 );
+  pid_left.SetOutputLimits(-400, 400 );
   pid_right.SetMode(AUTOMATIC);
   pid_right.SetSampleTime(publish_delay);
-  pid_right.SetOutputLimits(-100, 100 );
+  pid_right.SetOutputLimits(-400, 400 );
 
   positionLeft = knobLeft.read();
   positionRight = knobRight.read();
